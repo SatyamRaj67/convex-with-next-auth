@@ -1,4 +1,5 @@
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { auth } from "@/server/auth";
 import "@/styles/globals.css";
 
@@ -25,13 +26,21 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await auth();
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <SessionProvider session={session}>
           <main className="flex min-h-screen flex-col items-center justify-center">
             <ConvexClientProvider>
               <TRPCReactProvider>
-                {children} <Toaster />
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  enableColorScheme={true}
+                  disableTransitionOnChange
+                >
+                  {children} <Toaster />
+                </ThemeProvider>
               </TRPCReactProvider>
             </ConvexClientProvider>
           </main>
