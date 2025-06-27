@@ -5,7 +5,7 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { FormSuccess } from "@/components/form-success";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { UserRoleEnum } from "@/types";
+import { UserRole } from "@/types";
 import { toast } from "sonner";
 
 const AdminPage = () => {
@@ -34,7 +34,7 @@ const AdminPage = () => {
         <p className="text-center text-2xl font-semibold">🗝️Admin</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <RoleGate allowedRoles={UserRoleEnum.ADMIN}>
+        <RoleGate allowedRoles={UserRole.ADMIN}>
           <FormSuccess message="You are allowed to see this content!" />
         </RoleGate>
 

@@ -28,11 +28,13 @@ export default async function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body>
         <SessionProvider session={session}>
-          <ConvexClientProvider>
-            <TRPCReactProvider>
-              {children} <Toaster />
-            </TRPCReactProvider>
-          </ConvexClientProvider>
+          <main className="flex min-h-screen flex-col items-center justify-center">
+            <ConvexClientProvider>
+              <TRPCReactProvider>
+                {children} <Toaster />
+              </TRPCReactProvider>
+            </ConvexClientProvider>
+          </main>
         </SessionProvider>
       </body>
     </html>

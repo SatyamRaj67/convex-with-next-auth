@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { UserRoleEnum } from "@/types";
+import { UserRole } from "@/types";
 
 const SettingsPage = () => {
   const user = useCurrentUser();
@@ -193,10 +193,8 @@ const SettingsPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={UserRoleEnum.ADMIN}>
-                          ADMIN
-                        </SelectItem>
-                        <SelectItem value={UserRoleEnum.USER}>USER</SelectItem>
+                        <SelectItem value={UserRole.ADMIN}>ADMIN</SelectItem>
+                        <SelectItem value={UserRole.USER}>USER</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
