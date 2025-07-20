@@ -1,10 +1,10 @@
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { auth } from "@/server/auth";
 import "@/styles/globals.css";
 
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+
 import { type Metadata } from "next";
-import { SessionProvider } from "next-auth/react";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 
@@ -24,11 +24,10 @@ const geist = Geist({
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
   return (
-    <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
-      <body>
-        <SessionProvider session={session}>
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
+        <body>
           <main className="flex min-h-screen flex-col items-center justify-center">
             <ConvexClientProvider>
               <TRPCReactProvider>
@@ -37,15 +36,14 @@ export default async function RootLayout({
                   defaultTheme="system"
                   enableSystem
                   enableColorScheme={true}
-                  disableTransitionOnChange
                 >
                   {children} <Toaster />
                 </ThemeProvider>
               </TRPCReactProvider>
             </ConvexClientProvider>
           </main>
-        </SessionProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

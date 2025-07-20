@@ -1,27 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
-export const createUser = mutation({
-  args: { name: v.string(), email: v.string(), password: v.string() },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.insert("users", {
-      name: args.name,
-      email: args.email,
-      password: args.password,
-      role: "USER", // Default role
-      isTwoFactorEnabled: false,
-    });
-    return user;
-  },
-});
-
-export const getUserByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
+export const getUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    const user = userId === null ? null : await ctx.db.get(userId);
     return user;
   },
 });
@@ -29,9 +14,7 @@ export const getUserByEmail = query({
 export const getUserById = query({
   args: { id: v.id("users") },
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.id);
-
-    return user;
+    return await ctx.db.get(args.id);
   },
 });
 
@@ -42,9 +25,9 @@ export const updateUserById = mutation({
       name: v.optional(v.string()),
       email: v.optional(v.string()),
       password: v.optional(v.string()),
-      emailVerified: v.optional(v.number()), // Use number for timestamps
+      emailVerified: v.optional(v.number()),
+
       role: v.optional(v.union(v.literal("USER"), v.literal("ADMIN"))),
-      isTwoFactorEnabled: v.optional(v.boolean()),
     }),
   },
   handler: async (ctx, args) => {
