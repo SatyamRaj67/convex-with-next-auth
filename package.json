@@ -1,15 +1,12 @@
 {
-  "name": "app",
+  "name": "t3_+_next_auth_+_tRPC_+_template",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "next build",
     "check": "next lint && tsc --noEmit",
-    "dev": "concurrently \"bun run dev:frontend\" \"bun run dev:backend\"",
-    "dev:frontend": "next dev --turbo",
-    "dev:backend": "convex dev",
-    "predev": "convex dev --until-success && convex dev --once --run-sh \"node setup.mjs --once\" && convex dashboard",
+    "dev": "next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
@@ -19,8 +16,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auth/core": "^0.40.0",
-    "@convex-dev/auth": "^0.0.87",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -38,7 +33,6 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "^1.25.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.523.0",
     "next": "^15.2.3",

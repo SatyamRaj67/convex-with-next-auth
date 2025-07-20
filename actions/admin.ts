@@ -1,12 +1,12 @@
 "use server";
 
 import { currentRole } from "@/lib/auth";
-import { UserRole } from "@/types";
+import { UserRoleEnum } from "@/types";
 
 export const admin = async () => {
   const role = await currentRole();
 
-  if (role !== UserRole.ADMIN) {
+  if (role !== UserRoleEnum.ADMIN) {
     return { error: "Forbidden Server Action!" };
   }
 

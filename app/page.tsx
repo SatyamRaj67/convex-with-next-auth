@@ -10,17 +10,17 @@ const font = Poppins({
 
 export default async function HomePage() {
   return (
-    <main className="flex flex-col items-center justify-center bg-background h-full">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
       <div className="space-y-6 text-center">
         <h1
           className={cn(
-            "text-6xl font-semibold text-foreground drop-shadow-md",
+            "text-6xl font-semibold text-white drop-shadow-md",
             font.className,
           )}
         >
           🔒Auth
         </h1>
-        <p className="text-lg text-foreground">A simple authentication service</p>
+        <p className="text-lg text-white">A simple authentication service</p>
         <div>
           <LoginButton asChild>
             <Button variant="secondary" size="lg" className="font-bold">

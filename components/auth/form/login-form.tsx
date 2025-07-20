@@ -21,9 +21,10 @@ import { Button } from "@/components/ui/button";
 import { CardWrapper } from "@/components/auth/card/card-wrapper";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
+import { login } from "@/actions/login";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   InputOTP,
@@ -33,14 +34,7 @@ import {
 } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 
-import { useAuthActions } from "@convex-dev/auth/react";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
 export const LoginForm = () => {
-  const { signIn } = useAuthActions();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const urlError =
@@ -53,8 +47,6 @@ export const LoginForm = () => {
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
 
-  const isAuthenticated = useQuery(api.auth.isAuthenticated);
-
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -63,42 +55,32 @@ export const LoginForm = () => {
     },
   });
 
-  useEffect(() => {
-    if (isAuthenticated && !isPending) {
-      console.log("User is authenticated, redirecting...");
-      const redirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT;
-      router.push(redirectUrl);
-    }
-  }, [isAuthenticated, isPending, callbackUrl, router]);
-
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
     setError("");
     setSuccess("");
 
     startTransition(() => {
-      void signIn("password", {
-        ...values,
-        redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
-        flow: "signIn",
-      })
+      login(values, callbackUrl)
         .then((data) => {
-          console.log("Login response:", data);
+          if (data?.error) {
+            form.reset();
+            setError(data.error);
+          }
 
-          if (data.signingIn) {
-            console.log("Sign in process started, waiting for completion...");
-          } else {
-            setSuccess("Login successful!");
+          if (data?.success) {
+            form.reset();
+            setSuccess(data.success);
+          }
+
+          if (data?.twoFactor) {
+            setShowTwoFactor(true);
           }
         })
-        .catch((error) => {
-          console.error("Login error:", error);
+        .catch(() => {
           setError("Something went wrong!");
         });
     });
   };
-
-  console.log("Current auth status:", isAuthenticated);
-  console.log("Success state:", success);
 
   return (
     <CardWrapper

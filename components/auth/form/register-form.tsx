@@ -21,17 +21,11 @@ import { Button } from "@/components/ui/button";
 import { CardWrapper } from "@/components/auth/card/card-wrapper";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
+import { register } from "@/actions/register";
+
 import { useState, useTransition } from "react";
 
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useSearchParams } from "next/navigation";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-
 export const RegisterForm = () => {
-  const { signIn } = useAuthActions();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
-
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
@@ -39,9 +33,9 @@ export const RegisterForm = () => {
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      name: "",
       email: "",
       password: "",
+      name: "",
     },
   });
 
@@ -50,18 +44,10 @@ export const RegisterForm = () => {
     setSuccess("");
 
     startTransition(() => {
-      console.log("Registering user:", values);
-      signIn("password", {
-        ...values,
-        redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
-        flow: "signUp",
-      })
-        .then(() => {
-          setSuccess("Registration successful! Please log in.");
-        })
-        .catch(() => {
-          setError("Something went wrong!");
-        });
+      register(values).then((response) => {
+        setError(response.error);
+        setSuccess(response.success);
+      });
     });
   };
 

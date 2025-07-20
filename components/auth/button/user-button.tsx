@@ -28,7 +28,7 @@ export const UserButton = () => {
       <DropdownMenuContent className="w-40" align="end">
         <LogoutButton>
           <DropdownMenuItem>
-            <LogOutIcon className="mr-2 h-4 w-4" />
+            <LogOutIcon className="mr-2 h-4 w-4 text-white" />
             Logout
           </DropdownMenuItem>
         </LogoutButton>

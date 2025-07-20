@@ -1,71 +1,68 @@
 "use server";
 
-import { api } from "@/convex/_generated/api";
+import { getUserByEmail, getUserById, updateUserById } from "@/database/user";
+import { currentUser } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/mail";
 import { generateVerificationToken } from "@/lib/tokens";
 import { SettingsSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import * as z from "zod";
 
-import { ConvexHttpClient } from "convex/browser";
-import { env } from "@/env";
-
-// Initialize a server-side client to interact with Convex
-const convex = new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL);
-
 export const settings = async (values: z.infer<typeof SettingsSchema>) => {
-  const user = await convex.query(api.user.getUser);
+  const user = await currentUser();
 
-  if (!user) {
+  if (!user || !user.id) {
     return { error: "Unauthorized" };
   }
 
-  // if (user.isOAuth) {
-  //   values.email = undefined;
-  //   values.password = undefined;
-  //   values.newPassword = undefined;
-  // }
+  const dbUser = await getUserById(user.id);
 
-  // if (values.email && values.email !== user.email) {
-  //   const existingUser = await convex.query(api.user.getUserByEmail, {
-  //     email: values.email,
-  //   });
+  if (!dbUser) {
+    return { error: "Unathorized" };
+  }
 
-  //   if (existingUser && existingUser._id !== user.id) {
-  //     return { error: "Email already in use!" };
-  //   }
+  if (user.isOAuth) {
+    values.email = undefined;
+    values.password = undefined;
+    values.newPassword = undefined;
+    values.isTwoFactorEnabled = undefined;
+  }
 
-  //   const verificationToken = await generateVerificationToken(values.email);
-  //   await sendVerificationEmail(
-  //     verificationToken.email,
-  //     verificationToken.token,
-  //   );
+  if (values.email && values.email !== user.email) {
+    const existingUser = await getUserByEmail(values.email);
 
-  //   return { success: "Verification Email Sent!" };
-  // }
+    if (existingUser && existingUser.id !== user.id) {
+      return { error: "Email already in use!" };
+    }
 
-  // if (values.password && values.newPassword && dbUser.password) {
-  //   const passwordsMatch = await bcrypt.compare(
-  //     values.password,
-  //     dbUser.password,
-  //   );
+    const verificationToken = await generateVerificationToken(values.email);
+    await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token,
+    );
 
-  //   if (!passwordsMatch) {
-  //     return { error: "Invalid Password!" };
-  //   }
+    return { success: "Verification Email Sent!" };
+  }
 
-  //   const hashedPassword = await bcrypt.hash(values.newPassword, 10);
+  if (values.password && values.newPassword && dbUser.password) {
+    const passwordsMatch = await bcrypt.compare(
+      values.password,
+      dbUser.password,
+    );
 
-  //   values.password = hashedPassword;
-  //   values.newPassword = undefined;
-  // }
+    if (!passwordsMatch) {
+      return { error: "Invalid Password!" };
+    }
 
-  // await convex.mutation(api.user.updateUserById, {
-  //   id: user.id,
-  //   data: {
-  //     ...values,
-  //   },
-  // });
+    const hashedPassword = await bcrypt.hash(values.newPassword, 10);
+
+    values.password = hashedPassword;
+    values.newPassword = undefined;
+  }
+
+  await updateUserById(user.id, {
+    ...values,
+  });
 
   return { success: "Settings Updated!" };
 };

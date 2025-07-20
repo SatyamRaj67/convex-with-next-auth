@@ -5,6 +5,7 @@ import * as z from "zod";
 import { settings } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { SettingsSchema } from "@/schemas";
@@ -19,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import {
@@ -29,15 +31,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { UserRole } from "@/types";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { UserRoleEnum } from "@/types";
 
 const SettingsPage = () => {
-  const user = useQuery(api.user.getUser);
+  const user = useCurrentUser();
 
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
+  const { update } = useSession();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof SettingsSchema>>({
@@ -48,7 +49,7 @@ const SettingsPage = () => {
       name: user?.name || undefined,
       email: user?.email || undefined,
       role: user?.role || undefined,
-      // isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
+      isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
     },
   });
 
@@ -61,6 +62,7 @@ const SettingsPage = () => {
           }
           if (data.success) {
             setSuccess(data.success);
+            update();
           }
         })
         .catch(() => setError("An error occurred!"));
@@ -93,7 +95,7 @@ const SettingsPage = () => {
                   </FormItem>
                 )}
               />
-              {/* {user?.isOAuth === false && (
+              {user?.isOAuth === false && (
                 <>
                   <FormField
                     control={form.control}
@@ -150,8 +152,8 @@ const SettingsPage = () => {
                     )}
                   />
                 </>
-              )} */}
-              {/* {user?.isOAuth === false && (
+              )}
+              {user?.isOAuth === false && (
                 <FormField
                   control={form.control}
                   name="isTwoFactorEnabled"
@@ -173,7 +175,7 @@ const SettingsPage = () => {
                     </FormItem>
                   )}
                 />
-              )} */}
+              )}
               <FormField
                 control={form.control}
                 name="role"
@@ -191,8 +193,10 @@ const SettingsPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={UserRole.ADMIN}>ADMIN</SelectItem>
-                        <SelectItem value={UserRole.USER}>USER</SelectItem>
+                        <SelectItem value={UserRoleEnum.ADMIN}>
+                          ADMIN
+                        </SelectItem>
+                        <SelectItem value={UserRoleEnum.USER}>USER</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
