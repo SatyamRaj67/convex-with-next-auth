@@ -39,12 +39,6 @@ export const accountSchema = {
   session_state: v.optional(v.string()),
 };
 
-export const verificationTokenSchema = {
-  identifier: v.string(),
-  token: v.string(),
-  expires: v.number(),
-};
-
 export const authenticatorSchema = {
   credentialID: v.string(),
   userId: v.id("users"),
@@ -61,13 +55,19 @@ export const twoFactorConfirmationSchema = {
 };
 
 export const twoFactorTokenSchema = {
-  email: v.string(),
+  identifier: v.string(),
   token: v.string(),
   expires: v.number(),
 };
 
 export const passwordResetTokenSchema = {
-  email: v.string(),
+  identifier: v.string(),
+  token: v.string(),
+  expires: v.number(),
+};
+
+export const verificationTokenSchema = {
+  identifier: v.string(),
   token: v.string(),
   expires: v.number(),
 };
@@ -93,10 +93,10 @@ const authTables = {
   ),
   twoFactorTokens: defineTable(twoFactorTokenSchema)
     .index("token", ["token"])
-    .index("email", ["email"]),
+    .index("identifier", ["identifier"]),
   passwordResetTokens: defineTable(passwordResetTokenSchema)
     .index("token", ["token"])
-    .index("email", ["email"]),
+    .index("identifier", ["identifier"]),
 };
 
 export default defineSchema({

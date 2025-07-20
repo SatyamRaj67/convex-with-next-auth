@@ -3,14 +3,14 @@ import { mutation, query } from "./_generated/server";
 
 export const createPasswordResetToken = mutation({
   args: {
-    email: v.string(),
+    identifier: v.string(),
     token: v.string(),
     expires: v.number(), // timestamp
   },
-  handler: async (ctx, { email, token, expires }) => {
+  handler: async (ctx, { identifier, token, expires }) => {
     try {
       const tokenId = await ctx.db.insert("passwordResetTokens", {
-        email,
+        identifier,
         token,
         expires,
       });
@@ -22,13 +22,13 @@ export const createPasswordResetToken = mutation({
   },
 });
 
-export const getPasswordResetTokenByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, { email }) => {
+export const getPasswordResetTokenByIdentifier = query({
+  args: { identifier: v.string() },
+  handler: async (ctx, { identifier }) => {
     try {
       const passwordResetToken = await ctx.db
         .query("passwordResetTokens")
-        .filter((q) => q.eq(q.field("email"), email))
+        .filter((q) => q.eq(q.field("identifier"), identifier))
         .first();
       return passwordResetToken;
     } catch {

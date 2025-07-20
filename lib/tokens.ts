@@ -9,8 +9,8 @@ export const generateTwoFactorToken = async (email: string) => {
 
   // const existingToken = await getTwoFactorTokenByEmail(email);
   const existingToken = await fetchQuery(
-    api.twoFactorToken.getTwoFactorTokenByEmail,
-    { email },
+    api.twoFactorToken.getTwoFactorTokenByIdentifier,
+    { identifier: email },
   );
 
   if (existingToken) {
@@ -21,7 +21,7 @@ export const generateTwoFactorToken = async (email: string) => {
 
   const twoFactorToken = await fetchMutation(
     api.twoFactorToken.createTwoFactorToken,
-    { email, token, expires: expires.getTime() },
+    { identifier: email, token, expires: expires.getTime() },
   );
 
   return twoFactorToken;
@@ -32,8 +32,8 @@ export const generatePasswordResetToken = async (email: string) => {
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60); // 1 hour
 
   const existingToken = await fetchQuery(
-    api.passwordResetToken.getPasswordResetTokenByEmail,
-    { email },
+    api.passwordResetToken.getPasswordResetTokenByIdentifier,
+    { identifier: email },
   );
 
   if (existingToken) {
@@ -44,7 +44,7 @@ export const generatePasswordResetToken = async (email: string) => {
 
   const passwordResetToken = await fetchMutation(
     api.passwordResetToken.createPasswordResetToken,
-    { email, token, expires: expires.getTime() },
+    { identifier: email, token, expires: expires.getTime() },
   );
 
   return passwordResetToken;

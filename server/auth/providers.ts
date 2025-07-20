@@ -8,6 +8,7 @@ import { LoginSchema } from "@/schemas";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { UserRole } from "@/types";
 
 export default {
   providers: [
@@ -20,7 +21,6 @@ export default {
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;
 
-          // const user = await getUserByEmail(email);
           const user = await fetchQuery(api.user.getUserByEmail, {
             email,
           });
@@ -33,8 +33,9 @@ export default {
               id: user._id as Id<"users">,
               email: user.email,
               name: user.name,
-              role: user.role,
-              isTwoFactorEnabled: user.isTwoFactorEnabled,
+              role: (user.role as UserRole) || UserRole.USER,
+              isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+              isOAuth: false,
             };
           }
 

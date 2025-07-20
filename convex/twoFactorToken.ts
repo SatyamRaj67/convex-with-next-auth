@@ -16,13 +16,13 @@ export const getTwoFactorTokenByToken = query({
   },
 });
 
-export const getTwoFactorTokenByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, { email }) => {
+export const getTwoFactorTokenByIdentifier = query({
+  args: { identifier: v.string() },
+  handler: async (ctx, { identifier }) => {
     try {
       const twoFactorToken = await ctx.db
         .query("twoFactorTokens")
-        .filter((q) => q.eq(q.field("email"), email))
+        .filter((q) => q.eq(q.field("identifier"), identifier))
         .first();
       return twoFactorToken;
     } catch {
@@ -33,14 +33,14 @@ export const getTwoFactorTokenByEmail = query({
 
 export const createTwoFactorToken = mutation({
   args: {
-    email: v.string(),
+    identifier: v.string(),
     token: v.string(),
-    expires: v.number(), // timestamp
+    expires: v.number(), 
   },
-  handler: async (ctx, { email, token, expires }) => {
+  handler: async (ctx, { identifier, token, expires }) => {
     try {
       const tokenId = await ctx.db.insert("twoFactorTokens", {
-        email,
+        identifier,
         token,
         expires,
       });

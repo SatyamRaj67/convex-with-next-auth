@@ -41,8 +41,8 @@ export const login = async (
     );
 
     await sendVerificationEmail(
-      verificationToken.email,
-      verificationToken.token,
+      verificationToken!.identifier,
+      verificationToken!.token,
     );
 
     return { success: "Confirmation Email Sent!" };
@@ -51,9 +51,9 @@ export const login = async (
   if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {
       const twoFactorToken = await fetchQuery(
-        api.twoFactorToken.getTwoFactorTokenByEmail,
+        api.twoFactorToken.getTwoFactorTokenByIdentifier,
         {
-          email: existingUser.email,
+          identifier: existingUser.email,
         },
       );
 
@@ -95,7 +95,7 @@ export const login = async (
       );
     } else {
       const twoFactorToken = await generateTwoFactorToken(existingUser.email);
-      await sendTwoFactorEmail(twoFactorToken.email, twoFactorToken.token);
+      await sendTwoFactorEmail(twoFactorToken!.identifier, twoFactorToken!.token);
 
       return { twoFactor: true };
     }

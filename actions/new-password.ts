@@ -37,7 +37,7 @@ export const newPassword = async (
   }
 
   const existingUser = await fetchQuery(api.user.getUserByEmail, {
-    email: exisitingToken.email,
+    email: exisitingToken.identifier,
   });
 
   if (!existingUser) {
