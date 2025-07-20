@@ -1,37 +1,28 @@
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
-
-import {
-  createVerificationToken,
-  deleteVerificationTokenById,
-  getVerificationTokenByEmail,
-} from "@/database/verification-token";
-import {
-  createTwoFactorToken,
-  deleteTwoFactorTokenById,
-  getTwoFactorTokenByEmail,
-} from "@/database/two-factor-token";
-import {
-  createPasswordResetToken,
-  deletePasswordResetTokenById,
-  getPasswordResetTokenByEmail,
-} from "@/database/password-reset-token";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 
 export const generateTwoFactorToken = async (email: string) => {
   const token = crypto.randomInt(100_000, 1_000_000).toString();
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60); // 1 hour
 
-  const existingToken = await getTwoFactorTokenByEmail(email);
+  // const existingToken = await getTwoFactorTokenByEmail(email);
+  const existingToken = await fetchQuery(
+    api.twoFactorToken.getTwoFactorTokenByEmail,
+    { email },
+  );
 
   if (existingToken) {
-    await deleteTwoFactorTokenById(existingToken.id);
+    await fetchMutation(api.twoFactorToken.deleteTwoFactorTokenById, {
+      id: existingToken._id,
+    });
   }
 
-  const twoFactorToken = await createTwoFactorToken({
-    email,
-    token,
-    expires,
-  });
+  const twoFactorToken = await fetchMutation(
+    api.twoFactorToken.createTwoFactorToken,
+    { email, token, expires: expires.getTime() },
+  );
 
   return twoFactorToken;
 };
@@ -40,17 +31,21 @@ export const generatePasswordResetToken = async (email: string) => {
   const token = uuidv4();
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60); // 1 hour
 
-  const existingToken = await getPasswordResetTokenByEmail(email);
+  const existingToken = await fetchQuery(
+    api.passwordResetToken.getPasswordResetTokenByEmail,
+    { email },
+  );
 
   if (existingToken) {
-    await deletePasswordResetTokenById(existingToken.id);
+    await fetchMutation(api.passwordResetToken.deletePasswordResetTokenById, {
+      id: existingToken._id,
+    });
   }
 
-  const passwordResetToken = await createPasswordResetToken({
-    email,
-    token,
-    expires,
-  });
+  const passwordResetToken = await fetchMutation(
+    api.passwordResetToken.createPasswordResetToken,
+    { email, token, expires: expires.getTime() },
+  );
 
   return passwordResetToken;
 };
@@ -59,17 +54,21 @@ export const generateVerificationToken = async (email: string) => {
   const token = uuidv4();
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60); // 1 hour
 
-  const existingToken = await getVerificationTokenByEmail(email);
+  const existingToken = await fetchQuery(
+    api.verificationToken.getVerificationTokenByEmail,
+    { email },
+  );
 
   if (existingToken) {
-    await deleteVerificationTokenById(existingToken.id);
+    await fetchMutation(api.verificationToken.deleteVerificationTokenById, {
+      id: existingToken._id,
+    });
   }
 
-  const verificationToken = await createVerificationToken({
-    email,
-    token,
-    expires,
-  });
+  const verificationToken = await fetchMutation(
+    api.verificationToken.createVerificationToken,
+    { identifier: email, token, expires: expires.getTime() },
+  );
 
   return verificationToken;
 };

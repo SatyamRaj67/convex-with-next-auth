@@ -1,13 +1,13 @@
 "use server";
 
-import { getUserByEmail, updateUserById } from "@/database/user";
-import {
-  deleteVerificationTokenById,
-  getVerificationTokenByToken,
-} from "@/database/verification-token";
+import { api } from "@/convex/_generated/api";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 
 export const newVerification = async (token: string) => {
-  const existingToken = await getVerificationTokenByToken(token);
+  const existingToken = await fetchQuery(
+    api.verificationToken.getVerificationTokenByToken,
+    { token },
+  );
 
   if (!existingToken) {
     return { error: "Token does not exist!" };
@@ -19,18 +19,25 @@ export const newVerification = async (token: string) => {
     return { error: "Token has expired!" };
   }
 
-  const existingUser = await getUserByEmail(existingToken.email);
+  const existingUser = await fetchQuery(api.user.getUserByEmail, {
+    email: existingToken.identifier,
+  });
 
   if (!existingUser) {
     return { error: "User (Email) does not exist!" };
   }
 
-  await updateUserById(existingUser.id, {
-    emailVerified: new Date(),
-    email: existingToken.email,
+  await fetchMutation(api.user.updateUserById, {
+    id: existingUser._id,
+    data: {
+      emailVerified: Date.now(),
+      email: existingToken.identifier,
+    },
   });
 
-  await deleteVerificationTokenById(existingToken.id);
+  await fetchMutation(api.verificationToken.deleteVerificationTokenById, {
+    id: existingToken._id,
+  });
 
   return { success: "Email Verified!" };
 };

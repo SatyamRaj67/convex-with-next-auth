@@ -1,12 +1,16 @@
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import providers from "./providers";
-import { getUserById, updateUserById } from "@/database/user";
-import {
-  deleteTwoFactorConfirmationByUserId,
-  getTwoFactorConfirmationByUserId,
-} from "@/database/two-factor-confirmation";
 import type { UserRole } from "@/types";
-import { getAccountByUserId } from "@/database/account";
+import { ConvexAdapter } from "./convexAdapter";
+
+import { SignJWT, importPKCS8 } from "jose";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+const CONVEX_SITE_URL = process.env.NEXT_PUBLIC_CONVEX_URL!.replace(
+  /.cloud$/,
+  ".site",
+);
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -16,8 +20,9 @@ import { getAccountByUserId } from "@/database/account";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
+    convexToken: string;
     user: {
-      id: string;
+      id: Id<"users">;
       // ...other properties
       role: UserRole;
       isTwoFactorEnabled: boolean;
@@ -39,14 +44,18 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
   events: {
     async linkAccount({ user }) {
-      await updateUserById(user.id!, {
-        emailVerified: new Date(),
+      await fetchMutation(api.user.updateUserById, {
+        id: user.id as Id<"users">,
+        data: {
+          emailVerified: Date.now(),
+        },
       });
     },
   },
@@ -57,7 +66,9 @@ export const authConfig = {
 
       if (!user.id) return false;
 
-      const existingUser = await getUserById(user.id);
+      const existingUser = await fetchQuery(api.user.getUserById, {
+        id: user.id as Id<"users">,
+      });
 
       // Prevent sign in without email verification
       if (!existingUser?.emailVerified) {
@@ -65,21 +76,40 @@ export const authConfig = {
       }
 
       if (existingUser.isTwoFactorEnabled) {
-        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
-          existingUser.id,
+        const twoFactorConfirmation = await fetchQuery(
+          api.twoFactorConfirmation.getTwoFactorConfirmationByUserId,
+          { userId: existingUser._id },
         );
 
         if (!twoFactorConfirmation) return false;
 
         // Delete Two Factor Confirmation for Next SignIn
-        await deleteTwoFactorConfirmationByUserId(existingUser.id);
+        await fetchMutation(
+          api.twoFactorConfirmation.deleteTwoFactorConfirmationByUserId,
+          { userId: existingUser._id },
+        );
       }
 
       return true;
     },
-    session: ({ session, token }) => {
+    session: async ({ session, token }) => {
+      const privateKey = await importPKCS8(
+        process.env.CONVEX_AUTH_PRIVATE_KEY!,
+        "RS256",
+      );
+
+      const convexToken = await new SignJWT({
+        sub: token.sub,
+      })
+        .setProtectedHeader({ alg: "RS256" })
+        .setIssuedAt()
+        .setIssuer(CONVEX_SITE_URL)
+        .setAudience("convex")
+        .setExpirationTime("1h")
+        .sign(privateKey);
+
       if (token.sub && session.user) {
-        session.user.id = token.sub;
+        session.user.id = token.sub as Id<"users">;
       }
       if (token.role && session.user) {
         session.user.role = token.role as UserRole;
@@ -91,17 +121,21 @@ export const authConfig = {
         session.user.isOAuth = token.isOAuth as boolean;
       }
 
-      return session;
+      return { ...session, convexToken };
     },
     jwt: async ({ token, user, account }) => {
       if (!token.sub) return token;
 
-      const existingUser = await getUserById(token.sub);
+      const existingUser = await fetchQuery(api.user.getUserById, {
+        id: token.sub as Id<"users">,
+      });
 
       if (!existingUser) return token;
 
-      const existingAccount = await getAccountByUserId(existingUser.id);
-
+      const existingAccount = await fetchQuery(api.account.getAccountByUserId, {
+        userId: existingUser._id,
+      });
+      
       token.isOAuth = !!existingAccount;
       token.name = existingUser.name;
       token.email = existingUser.email;
@@ -114,5 +148,6 @@ export const authConfig = {
   session: {
     strategy: "jwt",
   },
+  adapter: ConvexAdapter,
   ...providers,
 } satisfies NextAuthConfig;

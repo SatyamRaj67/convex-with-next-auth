@@ -1,12 +1,8 @@
 "use server";
-
-import {
-  deletePasswordResetTokenById,
-  getPasswordResetTokenByToken,
-} from "@/database/password-reset-token";
-import { getUserByEmail, updateUserById } from "@/database/user";
+import { api } from "@/convex/_generated/api";
 import { NewPasswordSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import * as z from "zod";
 
 export const newPassword = async (
@@ -25,7 +21,10 @@ export const newPassword = async (
     return { error: "Missing Token!" };
   }
 
-  const exisitingToken = await getPasswordResetTokenByToken(token);
+  const exisitingToken = await fetchQuery(
+    api.passwordResetToken.getPasswordResetTokenByToken,
+    { token },
+  );
 
   if (!exisitingToken) {
     return { error: "Invalid token!" };
@@ -37,7 +36,9 @@ export const newPassword = async (
     return { error: "Token has expired!" };
   }
 
-  const existingUser = await getUserByEmail(exisitingToken.email);
+  const existingUser = await fetchQuery(api.user.getUserByEmail, {
+    email: exisitingToken.email,
+  });
 
   if (!existingUser) {
     return { error: "Email does not exist!" };
@@ -45,11 +46,16 @@ export const newPassword = async (
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  await updateUserById(existingUser.id, {
-    password: hashedPassword,
+  await fetchMutation(api.user.updateUserById, {
+    id: existingUser._id,
+    data: {
+      password: hashedPassword,
+    },
   });
 
-  await deletePasswordResetTokenById(exisitingToken.id);
+  await fetchMutation(api.passwordResetToken.deletePasswordResetTokenById, {
+    id: exisitingToken._id,
+  });
 
   return { success: "Password Updated!" };
 };

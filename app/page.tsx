@@ -2,6 +2,8 @@ import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/auth/button/login-button";
+import ConvexClientProvider from "@/components/auth/convex/convex-provider-with-auth";
+import { auth } from "@/server/auth";
 
 const font = Poppins({
   subsets: ["latin"],
@@ -9,7 +11,9 @@ const font = Poppins({
 });
 
 export default async function HomePage() {
+  const session = await auth();
   return (
+    <ConvexClientProvider session={session}>
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
       <div className="space-y-6 text-center">
         <h1
@@ -30,5 +34,6 @@ export default async function HomePage() {
         </div>
       </div>
     </main>
+    </ConvexClientProvider>
   );
 }

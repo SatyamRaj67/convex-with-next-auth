@@ -1,11 +1,12 @@
 "use server";
 
-import { getUserByEmail, getUserById, updateUserById } from "@/database/user";
+import { api } from "@/convex/_generated/api";
 import { currentUser } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/mail";
 import { generateVerificationToken } from "@/lib/tokens";
 import { SettingsSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import * as z from "zod";
 
 export const settings = async (values: z.infer<typeof SettingsSchema>) => {
@@ -15,7 +16,9 @@ export const settings = async (values: z.infer<typeof SettingsSchema>) => {
     return { error: "Unauthorized" };
   }
 
-  const dbUser = await getUserById(user.id);
+  const dbUser = await fetchQuery(api.user.getUserById, {
+    id: user.id,
+  });
 
   if (!dbUser) {
     return { error: "Unathorized" };
@@ -29,16 +32,18 @@ export const settings = async (values: z.infer<typeof SettingsSchema>) => {
   }
 
   if (values.email && values.email !== user.email) {
-    const existingUser = await getUserByEmail(values.email);
+    const existingUser = await fetchQuery(api.user.getUserByEmail, {
+      email: values.email,
+    });
 
-    if (existingUser && existingUser.id !== user.id) {
+    if (existingUser && existingUser._id !== user.id) {
       return { error: "Email already in use!" };
     }
 
     const verificationToken = await generateVerificationToken(values.email);
     await sendVerificationEmail(
-      verificationToken.email,
-      verificationToken.token,
+      verificationToken!.identifier,
+      verificationToken!.token,
     );
 
     return { success: "Verification Email Sent!" };
@@ -60,8 +65,11 @@ export const settings = async (values: z.infer<typeof SettingsSchema>) => {
     values.newPassword = undefined;
   }
 
-  await updateUserById(user.id, {
-    ...values,
+  await fetchMutation(api.user.updateUserById, {
+    id: user.id,
+    data: {
+      ...values,
+    },
   });
 
   return { success: "Settings Updated!" };

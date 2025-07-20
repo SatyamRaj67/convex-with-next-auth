@@ -5,9 +5,11 @@ import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 
 import { LoginSchema } from "@/schemas";
-import { getUserByEmail } from "@/database/user";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
-export default{
+export default {
   providers: [
     Google,
     GitHub,
@@ -18,13 +20,22 @@ export default{
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;
 
-          const user = await getUserByEmail(email);
+          // const user = await getUserByEmail(email);
+          const user = await fetchQuery(api.user.getUserByEmail, {
+            email,
+          });
           if (!user || !user.password) return null;
 
           const passwordMatch = await bcrypt.compare(password, user.password);
 
           if (passwordMatch) {
-            return user;
+            return {
+              id: user._id as Id<"users">,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              isTwoFactorEnabled: user.isTwoFactorEnabled,
+            };
           }
 
           throw new Error("Invalid credentials");
