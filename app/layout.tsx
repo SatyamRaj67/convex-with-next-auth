@@ -26,7 +26,11 @@ export default async function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body>
         <SessionProvider session={session}>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <main className="flex min-h-screen flex-col items-center justify-center">
+              {children}
+            </main>
+          </TRPCReactProvider>
         </SessionProvider>
       </body>
     </html>

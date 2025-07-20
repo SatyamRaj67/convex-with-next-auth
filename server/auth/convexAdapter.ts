@@ -18,7 +18,9 @@ type Authenticator = AdapterAuthenticator & { userId: Id<"users"> };
 
 export const ConvexAdapter: Adapter = {
   async createAuthenticator(authenticator: Authenticator) {
-    await callMutation(api.authAdapter.createAuthenticator, { authenticator });
+    await callMutation(api.authAdapter.createAuthenticator, {
+      authenticator: toDB(authenticator),
+    });
     return authenticator;
   },
   async createSession(session: Session) {
@@ -46,6 +48,7 @@ export const ConvexAdapter: Adapter = {
       }),
     );
   },
+  // @ts-ignore
   async deleteUser(id: Id<"users">) {
     return maybeUserFromDB(
       await callMutation(api.authAdapter.deleteUser, { id }),
@@ -60,6 +63,7 @@ export const ConvexAdapter: Adapter = {
   async getAuthenticator(credentialID) {
     return await callQuery(api.authAdapter.getAuthenticator, { credentialID });
   },
+  // @ts-ignore
   async getSessionAndUser(sessionToken) {
     const result = await callQuery(api.authAdapter.getSessionAndUser, {
       sessionToken,
@@ -70,9 +74,11 @@ export const ConvexAdapter: Adapter = {
     const { user, session } = result;
     return { user: userFromDB(user), session: sessionFromDB(session) };
   },
+  // @ts-ignore
   async getUser(id: Id<"users">) {
     return maybeUserFromDB(await callQuery(api.authAdapter.getUser, { id }));
   },
+  // @ts-ignore
   async getUserByAccount({ provider, providerAccountId }) {
     return maybeUserFromDB(
       await callQuery(api.authAdapter.getUserByAccount, {
@@ -81,6 +87,7 @@ export const ConvexAdapter: Adapter = {
       }),
     );
   },
+  // @ts-ignore
   async getUserByEmail(email) {
     return maybeUserFromDB(
       await callQuery(api.authAdapter.getUserByEmail, { email }),

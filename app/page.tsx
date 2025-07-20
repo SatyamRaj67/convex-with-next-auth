@@ -14,7 +14,7 @@ export default async function HomePage() {
   const session = await auth();
   return (
     <ConvexClientProvider session={session}>
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
+    <main className="flex h-full flex-col items-center justify-center bg-gray-900">
       <div className="space-y-6 text-center">
         <h1
           className={cn(
