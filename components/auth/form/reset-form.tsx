@@ -1,6 +1,6 @@
 "use client";
 
-import * as z from "zod";
+import type * as z from "zod";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,8 +41,8 @@ export const ResetForm = () => {
     setError("");
     setSuccess("");
 
-    startTransition(() => {
-      reset(values).then((response) => {
+    startTransition(async () => {
+      await reset(values).then((response) => {
         setError(response?.error);
         setSuccess(response?.success);
       });

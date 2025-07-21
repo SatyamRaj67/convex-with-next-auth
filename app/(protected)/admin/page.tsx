@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const AdminPage = () => {
   const onServerActionClick = () => {
-    admin().then((res) => {
+    void admin().then((res) => {
       if (res.success) {
         toast.success(res.success);
       } else {
@@ -20,7 +20,7 @@ const AdminPage = () => {
   };
 
   const onApiRouteClick = () => {
-    fetch("/api/admin").then((res) => {
+    void fetch("/api/admin").then((res) => {
       if (res.ok) {
         toast.success("Allowed API Route!");
       } else {

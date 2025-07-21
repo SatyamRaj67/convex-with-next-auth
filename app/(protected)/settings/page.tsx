@@ -1,6 +1,6 @@
 "use client";
 
-import * as z from "zod";
+import type * as z from "zod";
 
 import { settings } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
@@ -46,23 +46,23 @@ const SettingsPage = () => {
     defaultValues: {
       password: undefined,
       newPassword: undefined,
-      name: user?.name || undefined,
-      email: user?.email || undefined,
-      role: user?.role || undefined,
-      isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
+      name: user?.name ?? undefined,
+      email: user?.email ?? undefined,
+      role: user?.role ?? undefined,
+      isTwoFactorEnabled: user?.isTwoFactorEnabled ?? undefined,
     },
   });
 
   const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
     startTransition(() => {
       settings(values)
-        .then((data) => {
+        .then(async (data) => {
           if (data.error) {
             setError(data.error);
           }
           if (data.success) {
             setSuccess(data.success);
-            update();
+            await update();
           }
         })
         .catch(() => setError("An error occurred!"));
